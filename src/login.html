@@ -1,0 +1,110 @@
+<html>
+
+<head>
+	<title>WinCC Unified RT</title>
+</head>
+
+<body style="margin: 0;">
+	<iframe src="/UMC" style="height: 100vh; width: 100vw; border-width: 0;"></iframe>
+	<script>
+		function getUrlVars() {
+			var vars = {};
+			var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+				vars[key] = value;
+			});
+			return vars;
+		}
+
+		var urlVars = getUrlVars();
+		window.history.pushState('object or string', '', window.location.href.split('?').shift()); // remove the credentials from URL without refreshing the page
+
+		var timerIdInterval2 = setInterval(function () {
+			var runtime = document.getElementsByTagName('iframe')[0].contentWindow.document;
+			if (runtime) {
+
+				var d = runtime;
+				var gElements = d.getElementsByTagName("g");
+				var element = d.querySelector('[data-tif-id="Logout"]');
+				if (element) {
+					element.dispatchEvent(new PointerEvent('pointerdown'));
+					element.dispatchEvent(new PointerEvent('pointerup', { pointerType: 'mouse' }));
+
+					console.log('autologoff triggered');
+					clearInterval(timerIdInterval2);
+					clearTimeout(timerIdTimeout2);
+				}
+			}
+		}, 500);
+		var timerIdTimeout2 = setTimeout(function () {
+			console.log('abort autologoff');
+			clearInterval(timerIdInterval2);
+		}, 30000);
+
+
+		var loggingIn = false;
+		var timerIsLoggedIn = setInterval(function () {
+			var iframes = document.getElementsByTagName('iframe');
+			if (!loggingIn && iframes && iframes.length > 0) {
+				var isLoggedIn = iframes[0].contentWindow.document.getElementById('profile-link');
+				// console.log(iframes[0].contentWindow.document);
+				if (isLoggedIn) {
+					console.log("User is already logged in!");
+					clearInterval(timerIsLoggedIn);
+					window.location.href = "/WebRH";
+				} else {
+					console.log("User is NOT logged in!");
+					// clearTimeout(timerIsLoggedIn);
+				}
+			}
+		}, 200);
+
+		var timerIdInterval = setInterval(function () {
+			var loginframe = document.getElementsByTagName('iframe')[0];
+			if (loginframe) {
+				//in future check if all elements are loaded, too
+				var d = loginframe.contentWindow.document;
+				var user = d.getElementById('username');
+				if (user) {
+					var pass = d.getElementById('password');
+					var btn = d.getElementById('loginFormSubmit');
+					user.value = urlVars.user; // 'UMCAdmin';
+					pass.value = urlVars.password;// 'Siemens123!';
+					loggingIn = true;
+					clearInterval(timerIsLoggedIn);
+					pass.dispatchEvent(new Event('input'));
+					btn.click();
+					console.log('autologin triggered')
+					clearInterval(timerIdInterval);
+					clearTimeout(timerIdTimeout);
+
+					//stop logout
+					clearInterval(timerIdInterval2);
+					clearTimeout(timerIdTimeout2);
+
+					// check via cookie if the login is successful
+					const oldCookie = document.cookie.split(';').map(x => x.trim()).find(x => x.startsWith("authSessionId"));
+					let i = 0;
+					const timerIdInterval3 = setInterval(function () {
+						i++;
+						const newCookie = document.cookie.split(';').map(x => x.trim()).find(x => x.startsWith("authSessionId"));
+						if (newCookie !== oldCookie) {
+							clearInterval(timerIdInterval3);
+							window.location.href = "/WebRH";
+							console.log('successfully logged in. go to Unified');
+						} else if (i > 100) {
+							clearInterval(timerIdInterval3);
+							console.log('not successfully logged in. Timeout after 2500ms occured.');
+						}
+					}, 25);
+				}
+			}
+		}, 500);
+		var timerIdTimeout = setTimeout(function () {
+			console.log('abort autologin');
+			clearInterval(timerIdInterval);
+			clearInterval(timerIsLoggedIn);
+		}, 30000);
+	</script>
+</body>
+
+</html>
