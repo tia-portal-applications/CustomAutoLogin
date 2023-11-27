@@ -81,13 +81,28 @@
 					clearInterval(timerIdInterval2);
 					clearTimeout(timerIdTimeout2);
 
-					// check via cookie if the login is successful
-					const oldCookie = document.cookie.split(';').map(x => x.trim()).find(x => x.startsWith("authSessionId"));
+					// check via cookie if the login is successful -> does not work any more since V18Update3, because cookies are now HttpOnly and cannot be accessed via JavaScript, see: https://stackoverflow.com/questions/8064318/how-to-read-a-httponly-cookie-using-javascript
+					/*const oldCookie = document.cookie.split(';').map(x => x.trim()).find(x => x.startsWith("authSessionId"));
 					let i = 0;
 					const timerIdInterval3 = setInterval(function () {
 						i++;
 						const newCookie = document.cookie.split(';').map(x => x.trim()).find(x => x.startsWith("authSessionId"));
 						if (newCookie !== oldCookie) {
+							clearInterval(timerIdInterval3);
+							window.location.href = "/WebRH";
+							console.log('successfully logged in. go to Unified');
+						} else if (i > 100) {
+							clearInterval(timerIdInterval3);
+							console.log('not successfully logged in. Timeout after 2500ms occured.');
+						}
+					}, 25);*/
+					
+					// check via existing "profile-link" element inside the UMC iframe					
+					let i = 0;
+					const timerIdInterval3 = setInterval(function () {
+						i++;
+						const welcomeElement = loginframe.contentDocument.getElementById('profile-link');
+						if (welcomeElement) {
 							clearInterval(timerIdInterval3);
 							window.location.href = "/WebRH";
 							console.log('successfully logged in. go to Unified');
