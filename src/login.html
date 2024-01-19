@@ -63,8 +63,8 @@
 			if (loginframe) {
 				//in future check if all elements are loaded, too
 				var d = loginframe.contentWindow.document;
-				var user = d.getElementById('username');
-				if (user) {
+				if (d && d.getElementById("sigalg")?.value) { // sigalg is needed inside the formular for correct login
+					var user = d.getElementById('username');
 					var pass = d.getElementById('password');
 					var btn = d.getElementById('loginFormSubmit');
 					user.value = urlVars.user; // 'UMCAdmin';
